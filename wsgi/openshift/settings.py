@@ -203,6 +203,6 @@ LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (37.7749295, -122.41941550000001),
     'DEFAULT_ZOOM': 6,
     'MIN_ZOOM': 1,
-    'MAX_ZOOM': 8,
-    'TILES': 'http://serveradmincloud-serveradmin.rhcloud.com/media/openstreetmap/{z}/{x}/{y}.png'
+    'MAX_ZOOM': 7,
+    'TILES': 'http://unixlab.sfsu.edu/~tw1123/openstreetmap/{z}/{x}/{y}.png'
 }
