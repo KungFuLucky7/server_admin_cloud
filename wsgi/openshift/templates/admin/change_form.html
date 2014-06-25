@@ -1,0 +1,437 @@
+{% extends "admin/base_site.html" %}
+
+<!-- LOADING -->
+{% load admin_static i18n admin_modify admin_urls grp_tags %}
+{% load leaflet_tags %}
+{% load observations %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+		{% leaflet_css %}
+		<link rel="stylesheet" href="/static/observations.css">
+{% endblock %}
+
+<!-- JAVASCRIPTS -->
+{% block javascripts %}
+    {{ block.super }}
+    {% url 'admin:jsi18n' as jsi18nurl %}
+    <script type="text/javascript" src="{{ jsi18nurl|default:'../../../jsi18n/' }}"></script>
+    <script type="text/javascript" charset="utf-8">
+        (function($) {
+            $(document).ready(function() {
+                grappelli.initDateAndTimePicker();
+                $("#grp-content-container .grp-group").grp_collapsible_group();
+                $("#grp-content-container .grp-collapse").grp_collapsible({
+                    on_init: function(elem, options) {
+                        // open collapse (and all collapse parents) in case of errors
+                        if (elem.find("ul.errorlist").length > 0) {
+                            elem.removeClass("grp-closed")
+                                .addClass("grp-open");
+                            elem.parents(".grp-collapse")
+                                .removeClass("grp-closed")
+                                .addClass("grp-open");
+                        }
+                    }
+                });
+                var related_lookup_fields_fk = {% get_related_lookup_fields_fk adminform.model_admin %};
+                var related_lookup_fields_m2m = {% get_related_lookup_fields_m2m adminform.model_admin %};
+                var related_lookup_fields_generic = {% get_related_lookup_fields_generic adminform.model_admin %};
+                var autocomplete_fields_fk = {% get_autocomplete_lookup_fields_fk adminform.model_admin %};
+                var autocomplete_fields_m2m = {% get_autocomplete_lookup_fields_m2m adminform.model_admin %};
+                var autocomplete_fields_generic = {% get_autocomplete_lookup_fields_generic adminform.model_admin %};
+                $.each(related_lookup_fields_fk, function() {
+                    $("#id_" + this).grp_related_fk({lookup_url:"{% url 'grp_related_lookup' %}"});
+                });
+                $.each(related_lookup_fields_m2m, function() {
+                    $("#id_" + this).grp_related_m2m({lookup_url:"{% url 'grp_m2m_lookup' %}"});
+                });
+                $.each(related_lookup_fields_generic, function() {
+                    var content_type = "#id_" + this[0],
+                        object_id = "#id_" + this[1];
+                    $(object_id).grp_related_generic({content_type:content_type, object_id:object_id, lookup_url:"{% url 'grp_related_lookup' %}"});
+                });
+                $.each(autocomplete_fields_fk, function() {
+                    $("#id_" + this).grp_autocomplete_fk({
+                        lookup_url:"{% url 'grp_related_lookup' %}",
+                        autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                    });
+                });
+                $.each(autocomplete_fields_m2m, function() {
+                    $("#id_" + this).grp_autocomplete_m2m({
+                        lookup_url:"{% url 'grp_m2m_lookup' %}",
+                        autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                    });
+                });
+                $.each(autocomplete_fields_generic, function() {
+                    var content_type = "#id_" + this[0],
+                        object_id = "#id_" + this[1];
+                    $(object_id).grp_autocomplete_generic({
+                        content_type:content_type,
+                        object_id:object_id,
+                        lookup_url:"{% url 'grp_related_lookup' %}",
+                        autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                    });
+                });
+                $("a#grp-open-all").bind("click", function(){
+                    $("#grp-content .grp-collapse-handler").each(function() {
+                        $(this).parent(".grp-collapse").removeClass("grp-closed").addClass("grp-open");
+                    });   
+                });
+                $("a#grp-close-all").bind("click", function(){
+                    $("#grp-content .grp-collapse-handler").each(function() {
+                        $(this).parent(".grp-collapse").removeClass("grp-open").addClass("grp-closed");
+                    });
+                });
+                // HACK: get rid of currently/change with URL–fields. F**K!!!
+                $('p.url').each(function() {
+                    $(this).find("a").remove();
+                    var text = $(this).html();
+                    text = text.replace(/^\w*: /, "");
+                    text = text.replace(/<br>.*: /, "");
+                    $(this).html(text);
+                });
+                // HACK: rearrange inlines
+                $('div.grp-group').each(function() {
+                    var placeholder = $("fieldset.placeholder."+$(this).attr("id"));
+                    if (placeholder.length) {
+                        $(placeholder).replaceWith($(this));
+                    }
+                });
+            });
+        })(grp.jQuery);
+    </script>
+		{% leaflet_js %}
+		<script type="text/javascript">
+	      // javascript for loading the map
+				var map;
+				var marker;
+				function map_init (map, options) {
+						var marker = new L.Marker([37.7749295, -122.41941550000001], {draggable:false});
+						map.addLayer(marker);
+						window.map = map;
+						window.marker = marker;
+		        (function($) {
+		            $(document).ready(function() {
+										if ($("#id_latitude").val().length && $("#id_longitude").val().length) {
+			 									var map = window.map;
+												var marker = window.marker;
+												map.removeLayer(marker);
+												map.setView([$("#id_latitude").val(), $("#id_longitude").val()], 6);
+       									marker = new L.marker([$("#id_latitude").val(), $("#id_longitude").val()], {draggable:false});
+												map.addLayer(marker);
+												window.marker = marker;
+									  }
+				        });
+		        })(grp.jQuery);
+	  		}
+        (function($) {
+            $(document).ready(function() {
+		        		$("#id_latitude").change(function() {
+				        		var map = window.map;
+										var marker = window.marker;
+										map.removeLayer(marker);
+									 	map.setView([$("#id_latitude").val(), $("#id_longitude").val()], 6);
+         						marker = new L.marker([$("#id_latitude").val(), $("#id_longitude").val()], {draggable:false});
+										map.addLayer(marker);
+										window.marker = marker;
+		            });
+			         	$("#id_longitude").change(function() {
+					      		var map = window.map;
+										var marker = window.marker;
+										map.removeLayer(marker);
+									  map.setView([$("#id_latitude").val(), $("#id_longitude").val()], 6);
+         						marker = new L.marker([$("#id_latitude").val(), $("#id_longitude").val()], {draggable:false});
+										map.addLayer(marker);
+										window.marker = marker;
+			          });    
+		        });
+        })(grp.jQuery);
+		</script>
+    {{ media }}
+{% endblock %}
+
+{% block extrahead %}
+    {{ block.super }}
+    {% if adminform and add %}
+    <script type="text/javascript">
+        (function($){
+            $(document).ready(function() {
+                $('form#{{ opts.model_name }}_form :input:visible:enabled:first').focus();
+								if($("#id_species").length == 0)
+										$("input").blur();
+            });
+        }(grp.jQuery));
+    </script>
+    {% endif %}
+		{% if adminform and change and not request.user.is_superuser and perms.observations.readonly_observation %}
+    <script type="text/javascript">
+        (function($){
+            $(document).ready(function() {
+						    $('input').attr('readonly', true);
+								$('#return').attr('readonly', false);
+								$('.fb_show').hide();
+						    $('textarea').attr('readonly', true);
+						    $('input:checkbox').attr('disabled', true);
+						    $('select').attr('disabled', true);
+						    $('.add-another').hide();
+		        });
+		    }(grp.jQuery));
+		</script>
+		{% endif %}
+{% endblock %}
+
+<!-- COLTYPE/BODYCLASS -->
+{% block bodyclass %}{{ opts.app_label }}-{{ opts.object_name.lower }} grp-change-form{% endblock %}
+{% block content-class %}{% endblock %}
+
+<!-- PAGE-TOOLS -->
+{% block page-tools %}
+    {% if not is_popup %}
+        <ul>
+            <li><a href="javascript://" class="grp-tool" id="grp-open-all" title="{% trans 'Open All Items' %}">&nbsp;</a></li>
+            <li><a href="javascript://" class="grp-tool" id="grp-close-all" title="{% trans 'Close All Items' %}">&nbsp;</a></li>
+        </ul>
+    {% endif %}
+{% endblock %}
+
+<!-- BREADCRUMBS -->
+{% block breadcrumbs %}
+    {% if not is_popup %}
+        <ul>
+            <li><a href="{% url 'admin:index' %}">{% trans "Home" %}</a></li>
+            <li><a href="{% url 'admin:app_list' app_label=opts.app_label %}">{% trans app_label|capfirst|escape %}</a></li>
+            <li>{% if has_change_permission %}<a href="{% url opts|admin_urlname:'changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>{% else %}{{ opts.verbose_name_plural|capfirst }}{% endif %}</li>
+            <li>{% if add %}{% trans "Add" %} {{ opts.verbose_name }}{% else %}{{ original|truncatewords:"18" }}{% endif %}</li>
+        </ul>
+    {% endif %}
+{% endblock %}
+
+<!-- OBJECT TOOLS -->
+{% block object-tools %}
+    {% if change or add %}
+        {% if not is_popup %}
+            <ul class="grp-object-tools">
+                {% block object-tools-items %}
+                    {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
+										{% if request.path|form_get_app_name == "observation" %}
+												{% if request.GET.urlencode|length_is:"0" %}
+                    				<li class="guide"><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+												{% else %}
+                						<li class="guide"><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+												{% endif %}
+										{% endif %}
+										{% if change %}
+		                    <li><a href="{% add_preserved_filters history_url %}">{% trans "History" %}</a></li>
+		                    {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="grp-state-focus" target="_blank">{% trans "View on site" %}</a></li>{% endif%}
+										{% endif %}
+                {% endblock %}
+            </ul>
+        {% endif %}
+    {% endif %}
+{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+    <form {% if has_file_field %}enctype="multipart/form-data" {% endif %}action="{{ form_url }}" method="post" id="{{ opts.model_name }}_form">{% csrf_token %}{% block form_top %}{% endblock %} 
+        <div>
+            <!-- Popup Hidden Field -->
+            {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
+            
+            <!-- No Submit-Row on Top -->
+
+            <!-- Errors -->
+            {% if errors %}
+                <p class="errornote">{% if errors|length == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}</p>
+                <ul class="errorlist">{% for error in adminform.form.non_field_errors %}<li>{{ error }}</li>{% endfor %}</ul>
+            {% endif %}
+						
+            <!-- Quick Start Guide -->
+						{% if not request.GET.urlencode|length_is:"0" and request.path|form_get_app_name == "observation" and "e=guide" in request.GET.urlencode %}
+								<div>
+									<div>
+										<h1><strong>Quick Start Guide</strong></h1>
+										<h3><a href="#type" rel="nofollow">1) Select Obervation Type in the Form View</a></h3>
+										<h3><a href="#map" rel="nofollow">2) Use the Map Display in the Form View</a></h3>
+										<h3><a href="#image" rel="nofollow">3) Upload an Image in the Form View</a></h3>
+										<h3><a href="#revision" rel="nofollow">4) Add Revision Notes in the Form View</a></h3>
+										<h3><a href="#validate" rel="nofollow">5) Validate the Observation Entry in the Form View</a></h3>
+										<h3><a href="#history" rel="nofollow">6) View the History of the Observation Entry in the Form View</a></h3>
+									</div>
+									<br />
+									<a name="type"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>1) Select Observation Type in the Form View</strong></h3>
+									<ol>
+										<li>
+											There are four types of observation:
+											<ul class="rteindent1">
+												<li>
+													<strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Stationary</strong>&nbsp;-&nbsp;Observe in a single small location</li>
+												<li>
+													<strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Traveling</strong>&nbsp;- Observe while traveling&nbsp;along a trail</li>
+												<li>
+													<strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Casual</strong>&nbsp;- Observe in&nbsp;a random place</li>
+												<li>
+													<strong>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;* Area</strong>&nbsp;- Observe in&nbsp;a specified area</li>
+											</ul>
+										</li>
+										<li>
+											You can choose the type of the observation in the observation type drop-down menu (see <strong>Figure 1.1</strong>).<br /><img alt="observation_type_dropdown" src="/media/guide/observation_type_dropdown.png" style="width: 205px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 1.1: Observation type drop-down menu</strong></li>
+									</ol>
+									<br /><br /><br /><br />
+									<a name="map"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>2) Use the Map Display in the Form View</strong></h3>
+									<ol>
+										<li>
+											The map display in the form view displays the location of the observation (see&nbsp;<strong>Figure 2.1</strong>).<br /><img alt="map_display" src="/media/guide/map_display.png" style="width: 752px; height: 200px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 2.1: Observation map display</strong></li>
+										<li>
+											The map marker&nbsp;<img alt="map_marker" src="/media/guide/map_marker.png" style="width: 21px; height: 35px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;indicates&nbsp;your current location&nbsp;on the map. You can click and drag the map to change it&#39;s centered location.</li>
+										<li>
+											The map zoom control&nbsp;<img alt="map_zoom_control" src="/media/guide/map_zoom_control.png" style="width: 22px; height: 45px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;lets you&nbsp;zoom in/out the&nbsp;map.</li>
+										<li>
+											The reset view button&nbsp;<img alt="map_reset_view" src="/media/guide/map_reset_view.png" style="height: 25px; width: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;lets you see the map at a global level.</li>
+										<li>
+											The map display&nbsp;is initially marked and&nbsp;centered at San Francisco, California, USA. You can change the current&nbsp;location by entering the&nbsp;<strong>Latitude</strong> and&nbsp;<strong>Longitude</strong> in the GPS fields (see&nbsp;<strong>Figure 2.2</strong>). The map display will automatically mark and center at the given GPS fields (see&nbsp;<strong>Figure 2.2</strong>).<br /><img alt="map_gps_fields" src="/media/guide/map_gps_fields.png" style="width: 1083px; height: 130px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 2.2: Observation&nbsp;GPS fields</strong></li>
+									</ol>
+									<br /><br /><br /><br />
+									<a name="image"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>3) Upload an Image in the Form View</strong></h3>
+									<ol>
+										<li>
+											You can click on the file browser button <img alt="image_file_browser_icon" src="/media/guide/image_file_browser_icon.png" style="height: 25px; width: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;in the image field (see&nbsp;<strong>Figure 3.1</strong>)&nbsp;to upload an image.<br /><img alt="image_field" src="/media/guide/image_field.png" style="width: 1200px; height: 70px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.1: Observation&nbsp;image field</strong></li>
+										<li>
+											A pop-up window of a file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>)&nbsp;would appear for you to upload and&nbsp;manage your images.<br /><img alt="image_file_browser" src="/media/guide/image_file_browser.png" style="width: 583px; height: 350px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.2: Observation&nbsp;image file browser</strong></li>
+										<li>
+											You can sort the existing images by clicking on the column names. You can filter the existing images by using the filter menu options (see&nbsp;<strong>Figure 3.3</strong>) located at the upper right of the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>).<br />After setting filters, in the &quot;Results and Total&quot; tab&nbsp;<img alt="image_clear_filters" src="/media/guide/image_clear_filters.png" style="width: 109px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located&nbsp;above and below the images, you can press the number total button to&nbsp;clear all filters.<br /><img alt="image_filters" src="/media/guide/image_filters.png" style="width: 197px; height: 120px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.3: File browser filter menu options</strong><br />
+											You can search&nbsp;for particular images by using the search box&nbsp;<img alt="image_search_box" src="/media/guide/image_search_box.png" style="width: 220px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located at the upper center-right of the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>).</li>
+										<li>
+											In the file browser (see&nbsp;<strong>Figure 3.2</strong>), you can press the &quot;Upload&quot; button&nbsp;<img alt="image_upload_button" src="/media/guide/image_upload_button.png" style="width: 69px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to start uploading an image file.</li>
+										<li>
+											You will be taken to the image upload&nbsp;page (see&nbsp;<strong>Figure 3.4</strong>) to upload the image file.<br /><img alt="image_upload_page" src="/media/guide/image_upload_page.png" style="width: 608px; height: 200px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.4: File browser image upload page</strong></li>
+										<li>
+											On the image upload page&nbsp;(see&nbsp;<strong>Figure 3.4</strong>),&nbsp;click on the &quot;Help&quot; tab&nbsp;to expand the help text pane (see&nbsp;<strong>Figure 3.5</strong>).<br /><img alt="image_upload_help" src="/media/guide/image_upload_help.png" style="width: 711px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.5: File browser image upload page help text</strong></li>
+										<li>
+											On the image upload page&nbsp;(see&nbsp;<strong>Figure 3.4</strong>), click the &quot;Upload a File&quot; button to upload an image file. You&#39;ll see the &quot;Upload Completed&quot; status&nbsp;(see&nbsp;<strong>Figure 3.6</strong>)&nbsp;if your image is successfully uploaded.<br /><img alt="image_upload_completed_status" src="/media/guide/image_upload_completed_status.png" style="width: 525px; height: 200px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.6: File browser image upload page completed status</strong></li>
+										<li>
+											From the image upload page&nbsp;(see&nbsp;<strong>Figure 3.4</strong>), click on the &quot;FileBrowser&quot; breadcrumb <img alt="image_file_browser_return" src="/media/guide/image_file_browser_return.png" style="width: 108px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located at the upper left corner to return to the file browser main page&nbsp;(see&nbsp;<strong>Figure 3.2</strong>).</li>
+										<li>
+											In the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>), you can click the &quot;New Folder&quot; button&nbsp;<img alt="image_new_folder" src="/media/guide/image_new_folder.png" style="width: 92px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to create a new folder for storing images.</li>
+										<li>
+											In the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>), you can click the change button&nbsp;<img alt="image_upload_button" src="/media/guide/image_change_button.png" style="width: 72px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;of an existing image to edit or delete the image.</li>
+										<li>
+											You will be taken to the image detail&nbsp;page (see&nbsp;<strong>Figure 3.7</strong>) to edit or delete the image.<br /><img alt="image_detail_page" src="/media/guide/image_detail_page.png" style="width: 583px; height: 350px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.7: File browser image detail page</strong></li>
+										<li>
+											On the image detail page&nbsp;(see&nbsp;<strong>Figure 3.7</strong>), use the &quot;Edit Actions&quot; drop-down menu (see <strong>Figure 3.8</strong>)&nbsp;to edit the image.<br /><img alt="image_detail_page_dropdown" src="/media/guide/image_detail_page_dropdown.png" style="width: 147px; height: 120px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.8: File browser image detail page edit actions drop-down menu</strong></li>
+										<li>
+											On the image detail page&nbsp;(see&nbsp;<strong>Figure 3.7</strong>), press the &quot;Delete&quot; button to delete the image.</li>
+										<li>
+											From the image detail page&nbsp;(see&nbsp;<strong>Figure 3.7</strong>), click on the &quot;FileBrowser&quot; breadcrumb&nbsp;<img alt="image_file_browser_return" src="/media/guide/image_file_browser_return.png" style="width: 108px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located at the upper left corner to return to the file browser main page&nbsp;(see&nbsp;<strong>Figure 3.2</strong>).</li>
+										<li>
+											In the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>), you can click the image resolution button&nbsp;<img alt="image_resolution_button" src="/media/guide/image_resolution_button.png" style="width: 25px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;of an existing image to change the resolution of the image.<br />A pop-up window with various resolution options&nbsp;(see&nbsp;<strong>Figure 3.9</strong>)&nbsp;would appear for you to select your preferred image resolution.<br /><img alt="image_resolution_button_expanded" src="/media/guide/image_resolution_button_expanded.png" style="width: 125px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.9: File browser image resolution&nbsp;menu options</strong></li>
+										<li>
+											In the file browser&nbsp;(see&nbsp;<strong>Figure 3.2</strong>), you can click the &quot;Select&quot; button&nbsp;<img alt="image_select_button" src="/media/guide/image_select_button.png" style="width: 48px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to attach&nbsp;the image to&nbsp;the observation entry. You will return to the form view after pressing the&nbsp;&quot;Select&quot; button&nbsp;<img alt="image_select_button" src="/media/guide/image_select_button.png" style="width: 48px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+										<li>
+											After you return to the form view, you can click on the image&nbsp;thumbnail icon (see <strong>Figure 3.10</strong>) to open the image in full-size in another browser tab/window.<br /><img alt="image_field_icon" src="/media/guide/image_field_icon.png" style="width: 1200px; height: 140px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 3.10:&nbsp;</strong><strong style="font-size: 10px;">Observation&nbsp;image field thumbnail icon</strong></li>
+									</ol>
+									<br /><br /><br /><br />
+									<a name="revision"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>4) Add Revision Notes in the Form View</strong></h3>
+									<ol>
+										<li>
+											In the form view, you can add revision notes to an&nbsp;observation entry by clicking on the &quot;Revision Notes&quot; tab to expand the revision notes field (see <strong>Figure 4.1</strong>). The revision notes field is collapsed by default.<br /><img alt="revision_notes_field" src="/media/guide/revision_notes_field.png" style="width: 1125px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.1: Observation&nbsp;revision notes field</strong></li>
+										<li>
+											Adding revision notes to an observation entry helps the validation process by providing manual annotations and data provenance information.</li>
+									</ol>
+									<br /><br /><br /><br />
+									<a name="validate"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>5) Validate the Observation Entry in the Form View</strong></h3>
+									<ol>
+										<li>
+											After a thorough review of an observation entry, you can&nbsp;validate an&nbsp;observation entry for correct format by checking the &quot;Validated&quot;&nbsp;checkbox&nbsp;<img alt="validated_checkbox" src="/media/guide/validated_checkbox.png" style="width: 67px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;in the validation field (see <strong>Figure 5.1</strong>).<br /><img alt="validated_field" src="/media/guide/validated_field.png" style="width: 1200px; height: 63px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 5.1: Observation validated field</strong></li>
+										<li>
+											The validation process complements the uploading of observation entries by asserting their correctness of&nbsp;format.</li>
+									</ol>
+									<br /><br /><br /><br />
+									<a name="history"></a>
+									<hr />
+								  <br /><br /><br /><br />
+									<h3><strong>6) View the History of the Observation Entry in the Form View</strong></h3>
+									<ol>
+										<li>
+											<span style="font-family: arial, helvetica, sans-serif;">You can check the history of an existing observation entry by clicking on the &quot;History&quot; button&nbsp;<img alt="validated_checkbox" src="/media/guide/history_button.png" style="width: 71px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located at&nbsp;the upper right corner of the form view.</span></li>
+										<li>
+											You will be taken to the observation entry history page (see&nbsp;<strong>Figure 6.1</strong>) to view the change history of the entry.<br /><img alt="history_page" src="/media/guide/history_page.png" style="width: 938px; height: 250px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 6.1: Observation entry history page</strong></li>
+										<li>
+											You can use breadcrumbs to return to previous pages.</li>
+									</ol>
+									<br /><br /><br /><br />
+								</div>
+		
+		            <!-- Return-Row -->
+								<footer class="grp-module grp-submit-row grp-fixed-footer">
+								    <header style="display:none"><h1>Submit Options</h1></header>
+								    <ul>
+													<div id="results"></div>
+													<li><input id="return" type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+								    </ul>
+								</footer>
+						{% else %}
+		            <!-- Fieldsets -->
+		            {% block field_sets %}
+		                {% for fieldset in adminform %}
+		                    {% include "admin/includes/fieldset.html" %}
+											  {% for line in fieldset %}
+											        {% for field in line %}
+											            {% if field.field.name == "location" %}
+																			<fieldset class="grp-module "><h2 class="grp-collapse-handler">Map Display</h2>
+																	    {% leaflet_map "map" callback="window.map_init" %}
+																		  </fieldset>
+																		  </br>
+																	{% endif %}
+											        {% endfor %}
+											  {% endfor %}
+		                {% endfor %}
+		            {% endblock %}
+            
+		            {% block after_field_sets %}{% endblock %}
+            
+		            <!-- Inlines -->
+		            {% block inline_field_sets %}
+		                {% for inline_admin_formset in inline_admin_formsets %}
+		                    {% include inline_admin_formset.opts.template %}
+		                {% endfor %}
+		            {% endblock %}
+            
+		            {% block after_related_objects %}{% endblock %}
+            
+		            <!-- Submit-Row -->
+								{% if adminform and change and not request.user.is_superuser and perms.observations.readonly_observation %}
+				            <!-- Return-Row -->
+										<footer class="grp-module grp-submit-row grp-fixed-footer">
+										    <header style="display:none"><h1>Submit Options</h1></header>
+										    <ul>
+															<div id="results"></div>
+															<li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}'" value="Return" class="grp-button grp-default" name="return" ></li>
+										    </ul>
+										</footer>
+								{% else %}
+		            		{% block submit_buttons_bottom %}{% submit_row %}{% endblock %}
+								{% endif %}
+						{% endif %}
+            
+            <!-- JS for prepopulated fields -->
+            {% prepopulated_fields_js %}
+            
+        </div>
+    </form>
+{% endblock %}

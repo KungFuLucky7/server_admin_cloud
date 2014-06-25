@@ -3,18 +3,18 @@ from setuptools import setup
 import os
 
 # Put here required packages
-packages = ['Django<=1.6','psycopg2', 'GDAL', 'Pillow', 'diff-match-patch', 'South', 'dj-database-url', 'dj-static', 'django-appconf', 'django-filebrowser', 'django-geoposition', 'django-grappelli', 'django-import-export', 'django-leaflet', 'django-toolbelt', 'geopy', 'gunicorn', 'pystache', 'six', 'static', 'tablib', 'vboxapi', 'virtualenv', 'wsgiref']
+packages = ['Django<=1.6', 'GDAL', 'Pillow', 'Pygments', 'South', 'argparse', 'diff-match-patch', 'dj-database-url', 'dj-static', 'django-appconf', 'django-filebrowser', 'django-geoposition', 'django-grappelli', 'django-leaflet', 'django-toolbelt', 'djangorestframework', 'docutils', 'geopy', 'gunicorn', 'psycopg2', 'pystache', 'requests', 'six', 'static', 'tablib', 'virtualenv', 'wsgiref',]
 
 if 'REDISCLOUD_URL' in os.environ and 'REDISCLOUD_PORT' in os.environ and 'REDISCLOUD_PASSWORD' in os.environ:
      packages.append('django-redis-cache')
      packages.append('hiredis')
 
-setup(name='YourAppName',
+setup(name='server_admin',
       version='1.0',
-      description='OpenShift App',
-      author='Your Name',
-      author_email='example@example.com',
-      url='https://pypi.python.org/pypi',
+      description='Administrative User Interface for a Field Observation Server',
+      author='Terry C. Wong',
+      author_email='tw1123@mail.sfsu.edu',
+      url='https://github.com/KungFuLucky7/server_admin',
       install_requires=packages,
 )
 

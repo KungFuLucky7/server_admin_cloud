@@ -1,0 +1,132 @@
+{% extends "admin/import_export/base.html" %}
+{% load url from future %}
+{% load i18n %}
+{% load admin_urls %}
+{% load import_export_tags %}
+{% load observations %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+    {{ media.css }}
+		<link rel="stylesheet" href="/static/observations.css">
+{% endblock %}
+
+<!-- JAVASCRIPTS -->
+{% block javascripts %}
+  {{ block.super }}
+  <script type="text/javascript" charset="utf-8">
+	(function($) {
+	    $(document).ready(function() {
+					$("#submit").focus(function() {
+							this.blur();
+					});						
+		  		// $(".progress-label").text("Uploading...");
+		  		// $("#progressbar").progressbar({
+		  		// 		value: false
+		  		// });
+					var url_array = location.href.split('/');
+					var page = url_array[url_array.length-2];
+					if (page == "upload_images")
+							$("input.action-select").prop('checked', true);
+				
+					$("#include_images").change(function() {
+							if (this.checked) {
+									if (page == "upload") {
+											url_array[url_array.length-2] = "upload_images";
+											url = url_array.join('/');
+											location.replace(url);
+									}
+					    }
+							else {
+									if (page == "upload_images") {
+											url_array[url_array.length-2] = "upload";
+											url = url_array.join('/');
+											location.replace(url);
+									}
+							}
+					});
+					var status = navigator.onLine;
+					if ((page == "upload" || page == "upload_images") && status) {
+							var querystring = location.search.replace( '?', '' ).split( '&' );				
+							if (querystring.indexOf("e=success") !== -1) {
+									$(".grp-module").remove();
+									$(".form-row").append("<div class='grp-module'><h1>&nbsp;&nbsp;The observation entries were successfully uploaded to <a href='http://restservercloud-serveradmin.rhcloud.com/admin/'>restservercloud-serveradmin.rhcloud.com</a>!</h1></div>");
+							}
+							else if (querystring.indexOf("e=failure") !== -1) {
+									$(".grp-module").remove();
+									$(".form-row").append("<div class='grp-module'><h1>&nbsp;&nbsp;Error: The observation entries were not successfully uploaded!</h1></div>");
+							}
+
+							$("#submit").click(function() {
+									if ($("#id_file_format").val() != "") {
+											$(".grp-module").remove();
+							  			$(".progress-label").text("Uploading...");
+							    		$("#progressbar").progressbar({
+							    				value: false
+							    		});
+									}
+							});
+					}
+					else if ((page == "upload" || page == "upload_images") && !status) {
+							$(".grp-module").remove();
+							$(".form-row").append("<div class='grp-module'><h1>&nbsp;&nbsp;Error: There's no Internet connection for uploading observation entries!</h1></div>");
+							$(".submit-row").hide();
+					}
+	    });
+	})(grp.jQuery);
+	</script>
+{% endblock %}
+
+{% block breadcrumbs_last %}
+{% if request.path|list_get_app_name == "upload" or request.path|list_get_app_name == "upload_images" %}
+	{% trans "Upload" %}
+{% else %}
+	{% trans "Export" %}
+{% endif %}
+{% endblock %}
+
+{% block content %}
+{% if request.path|list_get_app_name == "upload" or request.path|list_get_app_name == "upload_images" %}
+	<h1>{% trans "Upload" %}</h1>
+{% else %}
+	<h1>{% trans "Export" %}</h1>
+{% endif %}
+
+<form action="" method="POST">
+  {% csrf_token %}
+
+    <fieldset class="module aligned">
+      {% for field in form %}
+        <div class="form-row">
+          {{ field.errors }}
+
+          {{ field.label_tag }}
+
+          {{ field }}
+					
+					<br /><br />
+					{% if request.path|list_get_app_name == "upload" or request.path|list_get_app_name == "upload_images" %}
+						<br /><div><h3>&nbsp;&nbsp;
+							<input id="include_images" class="action-select" name="include_images" type="checkbox" value="1" />
+							Include images with the upload?</h3>
+						</div><br />
+					{% endif %}
+					<div id="progressbar"><div class="progress-label"></div></div>
+
+          {% if field.field.help_text %}
+          	<p class="help">{{ field.field.help_text|safe }}</p>
+          {% endif %}
+        </div>
+      {% endfor %}
+    </fieldset>
+
+    <div class="submit-row">
+			{% if request.path|list_get_app_name == "upload" %}
+      	<input id="submit" type="submit" class="default" value="{% trans "Upload" %}">
+			{% else %}
+      	<input id="submit" type="submit" class="default" value="{% trans "Submit" %}">
+			{% endif %}
+    </div>
+</form>
+{% endblock %}

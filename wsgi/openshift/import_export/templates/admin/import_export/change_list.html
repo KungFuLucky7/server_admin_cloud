@@ -1,0 +1,451 @@
+{% extends "admin/base_site.html" %}
+
+<!-- LOADING -->
+{% load i18n grp_tags admin_urls admin_static admin_list %}
+{% load observations %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+    {{ media.css }}
+		<link rel="stylesheet" href="/static/observations.css">
+{% endblock %}
+
+<!-- JAVASCRIPTS -->
+{% block javascripts %}
+    {{ block.super }}
+    {{ media.js }}
+    {% if cl.formset or action_form %}
+        {% url 'admin:jsi18n' as jsi18nurl %}
+        <script type="text/javascript" src="{{ jsi18nurl|default:'../../jsi18n/'}}"></script>
+    {% endif %}
+    {% if action_form %}
+        <script type="text/javascript" charset="utf-8">
+            (function($) {
+                $(document).ready(function() {
+                    $("tr input.action-select").actions();
+                });
+            })(grp.jQuery);
+        </script>
+    {% endif %}
+    {% if cl.formset %}
+        <script type="text/javascript" charset="utf-8">
+            (function($) {
+                $(document).ready(function() {
+                    grappelli.initDateAndTimePicker();
+                    var prefix = "form";
+                    var related_lookup_fields_fk = {% get_related_lookup_fields_fk cl.model_admin %};
+                    var related_lookup_fields_m2m = {% get_related_lookup_fields_m2m cl.model_admin %};
+                    var related_lookup_fields_generic = {% get_related_lookup_fields_generic cl.model_admin %};
+                    var autocomplete_fields_fk = {% get_autocomplete_lookup_fields_fk cl.model_admin %};
+                    var autocomplete_fields_m2m = {% get_autocomplete_lookup_fields_m2m cl.model_admin %};
+                    var autocomplete_fields_generic = {% get_autocomplete_lookup_fields_generic cl.model_admin %};
+                    $.each(related_lookup_fields_fk, function() {
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this + "']")
+                        .grp_related_fk({lookup_url:"{% url 'grp_related_lookup' %}"});
+                    });
+                    $.each(related_lookup_fields_m2m, function() {
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this + "']")
+                        .grp_related_m2m({lookup_url:"{% url 'grp_m2m_lookup' %}"});
+                    });
+                    $.each(related_lookup_fields_generic, function() {
+                        var content_type = this[0],
+                            object_id = this[1];
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this[1] + "']")
+                        .each(function() {
+                            var ct_id = "#id_" + prefix + "-" + $(this).attr("id").split("-")[1] + "-" + content_type,
+                                obj_id = "#id_" + prefix + "-" + $(this).attr("id").split("-")[1] + "-" + object_id;
+                            $(this).grp_related_generic({content_type:ct_id, object_id:obj_id, lookup_url:"{% url 'grp_related_lookup' %}"});
+                        });
+                    });
+                    $.each(autocomplete_fields_fk, function() {
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this + "']")
+                        .each(function() {
+                            $(this).grp_autocomplete_fk({
+                                lookup_url:"{% url 'grp_related_lookup' %}",
+                                autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                            });
+                        });
+                    });
+                    $.each(autocomplete_fields_m2m, function() {
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this + "']")
+                        .each(function() {
+                            $(this).grp_autocomplete_m2m({
+                                lookup_url:"{% url 'grp_m2m_lookup' %}",
+                                autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                            });
+                        });
+                    });
+                    $.each(autocomplete_fields_generic, function() {
+                        var content_type = this[0],
+                            object_id = this[1];
+                        $("div.grp-changelist-results")
+                        .find("input[name^='" + prefix + "'][name$='" + this[1] + "']")
+                        .each(function() {
+                            var i = $(this).attr("id").match(/-\d+-/);
+                            if (i) {
+                                var ct_id = "#id_" + prefix + i[0] + content_type,
+                                    obj_id = "#id_" + prefix + i[0] + object_id;
+                                $(this).grp_autocomplete_generic({
+                                    content_type:ct_id,
+                                    object_id:obj_id,
+                                    lookup_url:"{% url 'grp_related_lookup' %}",
+                                    autocomplete_lookup_url:"{% url 'grp_autocomplete_lookup' %}"
+                                });
+                            }
+                        });
+                    });
+                    // reset actions select box
+                    $('.grp-changelist-actions select').val(-1);
+                    // find errors and move (because errors should be below form elements)
+                    $("ul.errorlist").each(function() {
+                        $(this).parents("td").append($(this));
+                    });
+                    // HACK: get rid of currently/change with URL–fields. F**K!!!
+                    $('p.url').each(function() {
+                        $(this).find("a").remove();
+                        var text = $(this).html();
+                        text = text.replace(/^\w*: /, "");
+                        text = text.replace(/<br>.*: /, "");
+                        $(this).html(text);
+                    });
+                });
+            })(grp.jQuery);
+        </script>
+    {% endif %}
+    <script type="text/javascript" charset="utf-8">
+        (function($) {
+            $(document).ready(function() {
+                grappelli.initSearchbar();
+                grappelli.initFilter();
+            });
+        })(grp.jQuery);
+    </script>
+    <script type="text/javascript" charset="utf-8">
+        (function($) {
+            $(document).ready(function() {
+							  if (!$('div').hasClass('grp-changelist-results')) {
+										$('a[class=export_link]').attr('href', window.location);
+										var querystring = location.search.replace( '?', '' ).split( '&' );
+										if (querystring != "e=guide")
+												$("#grp-content-container").after("<div class='grp-module'><h1>&nbsp;&nbsp;No observation entry is displayed!</h1></div>");
+								}
+            });
+        })(grp.jQuery);
+    </script>
+{% endblock %}
+
+<!-- COLTYPE/BODYCLASS-- >
+{% block bodyclass %}grp-change-list{% endblock %}
+{% block content-class %}{% endblock %}
+
+<!-- BREADCRUMBS -- >
+{% block breadcrumbs %}
+    {% if not is_popup %}
+        <ul class="grp-horizontal-list">
+            <li><a href="{% url 'admin:index' %}">{% trans "Home" %}</a></li>
+            <li><a href="{% url 'admin:app_list' app_label=cl.opts.app_label %}">{% trans app_label|capfirst|escape %}</a></li>
+            <li>{{ cl.opts.verbose_name_plural|capfirst }}</li>
+        </ul>
+    {% endif %}
+{% endblock %}
+
+<!-- CONTENT-TITLE -->
+{% block content_title %}
+    <h1>{{ cl.opts.verbose_name_plural|capfirst }}</h1>
+{% endblock %}
+
+<!-- OBJECT-TOOLS -->
+{% block object-tools %}
+    {% if has_add_permission %}
+        <ul class="grp-object-tools">
+            {% block object-tools-items %}
+                {% url cl.opts|admin_urlname:'add' as add_url %}
+								{{ block.super }}
+								{% if request.path|list_get_app_name == "observation" %}		
+								<li class="guide"><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+								{% endif %}
+                <li><a href="{% add_preserved_filters add_url is_popup %}" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
+            {% endblock %}
+        </ul>
+    {% endif %}
+{% endblock %}
+
+<!-- CONTENT -->
+{% block content %}
+		<!-- Quick Start Guide -->
+		{% if not request.GET.urlencode|length_is:"0" and request.path|list_get_app_name == "observation" and request.GET.urlencode == "e=guide" %}
+				<div>
+					<div>
+						<h1><strong>Quick Start Guide</strong></h1>
+						<h3><a href="#sort" rel="nofollow">1) Sort Observation Entries in the List View</a></h3>
+						<h3><a href="#filter" rel="nofollow">2) Filter Observation Entries in the List View</a></h3>
+						<h3><a href="#searching" rel="nofollow">3) Search Observation Entries in the List View</a></h3>
+						{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+						<h3><a href="#delete" rel="nofollow">4) Delete Observation Entries in the List View</a></h3>
+						<h3><a href="#import" rel="nofollow">5) Import Observation Entries in the List View</a></h3>
+						<h3><a href="#export" rel="nofollow">6) Export Observation Entries in the List View</a></h3>
+						<h3><a href="#upload" rel="nofollow">7) Upload Observation Entries in the List View</a></h3>
+						{% endif %}
+					</div>
+					<br />
+					<a name="sort"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>1) Sort Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							The observation list view is initially sorted by the species&rsquo; name alphabetically in&nbsp;ascending order&nbsp;<img alt="sort_button_ascending" src="/media/guide/sort_button_ascending.png" style="width: 111px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+						<li>
+							You can click&nbsp;on a&nbsp;column name to change the sorting order of the list by that column from ascending to descending&nbsp;<img alt="sort_button_descending" src="/media/guide/sort_button_descending.png" style="width: 110px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />,&nbsp;or reversely. You can sort the list by multiple columns.</li>
+						<li>
+							You can revert to the default order by clicking on an &ldquo;x&rdquo; button&nbsp;<img alt="sort_button_cross" src="/media/guide/sort_button_cross.png" style="width: 113px; height: 25px; border-width: 1px; border-style: solid; display: inline;" /> on the column name.</li>
+						<li>
+							You can sort entries by time interval (date, month, year) by clicking on the time sorting options <img alt="sort_by_time_interval" src="/media/guide/sort_by_time_interval.png" style="width: 96px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the upper left of the list view right above the column names.</li>
+					</ol>
+					<br /><br /><br /><br />
+					<a name="filter"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>2) Filter Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							You can filter the list by clicking on the &quot;Filter&quot;&nbsp;button <img alt="filter_button" src="/media/guide/filter_button.png" style="width: 188px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the upper right of the list view.</li>
+						<li>
+							A pop-up window with various filtering options&nbsp;(see <strong>Figure 2.1</strong>)&nbsp;would appear for you to select your preferred filters.<br /><img alt="filter_button_expanded" src="/media/guide/filter_button_expanded.png" style="width: 127px; height: 350px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 2.1: Filter menu options</strong></li>
+						<li>
+							After setting filters, in the &quot;Results and Total&quot; tab <img alt="clear_filters_button" src="/media/guide/clear_filters_button.png" style="width: 114px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;located&nbsp;above and below the entries, you can press the number total button to&nbsp;clear all filters.</li>
+					</ol>
+				  <br /><br /><br /><br />
+					<a name="searching"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>3) Search Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							You can search for particular observation&nbsp;entries by entering a search query in the search box&nbsp;<img alt="search_box" src="/media/guide/search_box.png" style="width: 207px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to the right of the &ldquo;Filter&rdquo; button&nbsp;<img alt="filter_button" src="/media/guide/filter_button.png" style="width: 188px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+					</ol>
+				  <br /><br /><br /><br />
+					{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+					<a name="delete"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>4) Delete Observation Entries in the List View</strong></h3>					
+					<ol>
+						<li>
+							You can select/deselect an observation entry by checking the checkbox&nbsp;<img alt="entry_checkbox_selected" src="/media/guide/entry_checkbox_selected.png" style="width: 23px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;/&nbsp;<img alt="entry_checkbox_unselected" src="/media/guide/entry_checkbox_unselected.png" style="width: 23px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to the very left of the entry.</li>
+						<li>
+							You can select all entries by checking the checkbox&nbsp;<img alt="entry_checkbox_unselected" src="/media/guide/entry_checkbox_unselected.png" style="width: 23px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;in the same row as&nbsp;the column names of the list view.&nbsp;</li>
+						<li>
+							You can perform batch delete operation to the selected entries with the batch delete menu (See <strong>Figure 4.1</strong>) at&nbsp;the lower left of the list view. The batch delete menu displays the number of selected entries of the total.<img alt="batch_delete_menu" src="/media/guide/batch_delete_menu.png" style="width: 463px; height: 50px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.1: Batch delete menu</strong></li>
+						<li>
+							You can click on the blank box of the batch delete menu and a&nbsp;pop-up window with the delete option&nbsp;(see <strong>Figure 4.2</strong>)&nbsp;would appear for you to apply the deletion of multiple entries.<img alt="batch_delete_menu_popup" src="/media/guide/batch_delete_menu_popup.png" style="width: 460px; height: 100px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.2: Batch delete menu popup</strong></li>
+					</ol>
+				  <br /><br /><br /><br />
+					<p><a name="import"></a></p>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>5) Import Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							You can import observation entries by submiting a data file in an&nbsp;accepted format.</li>
+						<li>
+							You can start an import by clicking on the import button <img alt="import_button" src="/media/guide/import_button.png" style="width: 67px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view right above the search box&nbsp;<img alt="search_box" src="/media/guide/search_box.png" style="width: 207px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+						<li>
+							You will be taken to the import page (see <strong>Figure 5.1</strong>) to submit the data file.<br /><img alt="import_page" src="/media/guide/import_page.png" style="width: 938px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 5.1: Import page</strong></li>
+						<li>
+							Select the format of the data file in the &quot;Format&quot; drop-down menu (See <strong>Figure 5.2</strong>).<br /><img alt="import_format_dropdown" src="/media/guide/import_format_dropdown.png" style="height: 150px; width: 174px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 5.2: Import format drop-down menu</strong></li>
+						<li>
+							Press the &quot;Submit&quot; button on the import page (see&nbsp;<strong>Figure 5.1</strong>)&nbsp;to process&nbsp;the import.</li>
+						<li>
+							You will be presented with a import&nbsp;confirmation with a preview of imported entries. Press the &quot;Confirm import&quot; button<img alt="confirm_import_button" src="/media/guide/confirm_import_button.png" style="width: 96px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;to complete the import.</li>
+					</ol>
+				  <br /><br /><br /><br />
+					<a name="export"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>6) Export Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							You can export observation entries by saving filtered&nbsp;entries&nbsp;to a data file in&nbsp;a supported&nbsp;format.</li>
+						<li>
+							Apply filters in the list view to choose the particular observation entries for an export. Don&#39;t apply any filters for exporting all existing entries.</li>
+						<li>
+							You can start an export by clicking on the export button&nbsp;<img alt="import_button" src="/media/guide/export_button.png" style="width: 66px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view right above the search box&nbsp;<img alt="search_box" src="/media/guide/search_box.png" style="width: 207px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+						<li>
+							You will be taken to the export page (see&nbsp;<strong>Figure 6.1</strong>) to save the data file.<br /><img alt="export_page" src="/media/guide/export_page.png" style="width: 1106px; height: 130px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 6.1: Export page</strong></li>
+						<li>
+							Select the format of the data file for the export in the &quot;Format&quot; drop-down menu (See&nbsp;<strong>Figure 6.2</strong>).<br /><img alt="export_format_dropdown" src="/media/guide/export_format_dropdown.png" style="height: 150px; width: 133px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 6.2: Export format drop-down menu</strong></li>
+						<li>
+							Press the &quot;Submit&quot; button on the export page (see&nbsp;<strong>Figure 6.1</strong>)&nbsp;to process&nbsp;the export.</li>
+						<li>
+							Your browser will automatically download the data file of the selected format to your &quot;Downloads&quot; directory.</li>
+					</ol>
+				  <br /><br /><br /><br />
+				  <a name="upload"></a>
+					<hr />
+				  <br /><br /><br /><br />
+					<h3><strong>7) Upload Observation Entries in the List View</strong></h3>
+					<ol>
+						<li>
+							You can upload observation entries to an external archive server as&nbsp;a data file&nbsp;in&nbsp;a supported&nbsp;format. You can include&nbsp;image files attached to the&nbsp;entries&nbsp;as well.</li>
+						<li>
+							Apply filters in the list view to choose the particular observation entries to upload. Don&#39;t apply any filters for&nbsp;uploading all existing entries.</li>
+						<li>
+							You can start an upload of entries&nbsp;by&nbsp;clicking on the upload button&nbsp;<img alt="upload_button" src="/media/guide/upload_button.png" style="width: 72px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the lower left&nbsp;of the list view below all obervation entries.</li>
+						<li>
+							You will be taken to the upload page (see&nbsp;<strong>Figure 7.1</strong>) to upload the entries.<br /><img alt="upload_page" src="/media/guide/upload_page.png" style="width: 947px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.1: Upload&nbsp;page</strong></li>
+						<li>
+							If you see the &quot;No Internet&quot; error message (see&nbsp;<strong>Figure 7.2</strong>) on the upload page, you don&#39;t have a valid Internet connection for uploading the entries.<br /><img alt="upload_error_msg" src="/media/guide/upload_error_msg.png" style="width: 982px; height: 45px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.2: Upload&nbsp;page no Internet error message</strong></li>
+						<li>
+							Select the format of the data file to&nbsp;upload&nbsp;in the &quot;Format&quot; drop-down menu (see&nbsp;<strong>Figure 7.3</strong>).<br /><img alt="upload_format_dropdown" src="/media/guide/upload_format_dropdown.png" style="height: 150px; width: 133px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.3: Upload format drop-down menu</strong></li>
+						<li>
+							You can include images attached to the selected&nbsp;entries by checking the checkbox <img alt="include_images_checkbox" src="/media/guide/include_images_checkbox.png" style="width: 251px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;below the&nbsp;&quot;Format&quot; drop-down menu (See&nbsp;<strong>Figure 7.3</strong>).</li>
+						<li>
+							Press the &quot;Upload&quot; button on the upload&nbsp;page (see&nbsp;<strong>Figure 7.1</strong>)&nbsp;to process&nbsp;the uploading.</li>
+						<li>
+							If you see the failure message (see <strong>Figure 7.4</strong>), the uploading of the observation entries is not successful and you can try again later.<br /><img alt="upload_failure_msg" src="/media/guide/upload_failure_msg.png" style="width: 982px; height: 45px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.4: Upload&nbsp;page failure&nbsp;message</strong></li>
+						<li>
+							If you see the success message (see <strong>Figure 7.5</strong>), the uploading of the observation entries is successful!<br /><img alt="upload_success_msg" src="/media/guide/upload_success_msg.png" style="width: 982px; height: 45px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.5: Upload&nbsp;page success message</strong></li>
+					</ol>
+				  <br /><br /><br /><br />
+					{% endif %}
+				</div>
+				
+        <!-- Return-Row -->
+				<footer class="grp-module grp-submit-row grp-fixed-footer">
+				    <header style="display:none"><h1>Submit Options</h1></header>
+				    <ul>
+									<div id="results"></div>
+									<li><input type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+				    </ul>
+				</footer>
+				
+        {% if adminform %}
+            {% block extrahead_guide %}
+                {{ block.super }}
+                <script type="text/javascript">
+                    (function($){
+                        $(document).ready(function() {
+                            $('form#{{ opts.model_name }}_form :input:visible:enabled:first').focus();
+														$("input").blur();																		
+                        });
+                    }(grp.jQuery));
+                </script>
+            {% endblock %}
+        {% endif %}
+		{% else %}
+		    {% if cl.search_fields or cl.has_filters or cl.date_hierarchy %}
+		        <div class="grp-module">
+		            <div class="grp-row">
+		                <div class="l-2cr-fluid {% if cl.has_filters and cl.search_fields %}l-d-12{% else %}{% if cl.has_filters or cl.search_fields %}l-d-6{% endif %}{% endif %}">
+		                    {% if cl.has_filters or cl.search_fields %}
+		                        {% block aside %}
+		                            <aside class="c-1">
+		                                <header style="display:none"><h1>{% if cl.search_fields %}Search{% if cl.has_filters %} &amp; {% endif %}{% endif %}{% if cl.has_filters %}Filters{% endif %}</h1></header>
+		                                <!-- SEARCH -->
+		                                {% if cl.search_fields %}
+		                                    {% block search %}
+		                                        <div id="search" class="g-d-6 g-d-f">
+		                                            {% search_form cl %}
+		                                        </div>
+		                                    {% endblock %}
+		                                {% endif %}
+		                                <!-- FILTERS -->
+		                                {% if cl.has_filters %}
+		                                    {% block filters %}
+		                                        <div id="grp-filters" class="g-d-6 g-d-l">
+		                                            <div class="grp-filter">
+		                                                <div class="grp-pulldown-container">
+		                                                    <a href="javascript://" class="grp-button grp-pulldown-handler">{% trans 'Filter' %}</a>
+		                                                    <div class="grp-pulldown-content" style="display: none;">
+		                                                        {% for spec in cl.filter_specs %}{% admin_list_filter cl spec %}{% endfor %}
+		                                                    </div>
+		                                                </div>
+		                                            </div>
+		                                        </div>
+		                                    {% endblock %}
+		                                {% endif %}
+		                            </aside>
+		                        {% endblock %}
+		                    {% endif %}
+		                    {% block pagination_top %}
+		                        <div class="c-2">
+		                            <!-- PAGINATION TOP -->
+		                            {% pagination cl %}
+		                        </div>
+		                    {% endblock %}
+
+		                </div>
+		            </div>
+		            <!-- DATE HIERARCHY -->
+		            {% block date_hierarchy %}
+		                {% if cl.date_hierarchy %}{% date_hierarchy cl %}{% endif %}
+		            {% endblock %}
+		        </div>
+		    {% endif %}
+		    <form id="grp-changelist-form" action="" method="post"{% if cl.formset.is_multipart %} enctype="multipart/form-data"{% endif %}>{% csrf_token %}
+		        <section id="grp-changelist" class="{% if cl.list_editable %} grp-editable{% endif %}">
+		            <header style="display:none"><h1>Results</h1></header>
+		            <!-- POPUP -->
+		            {% if is_popup %}<input type="hidden" name="_popup" value="1" />{% endif %}
+		            <!-- ERRORS -->
+		            {% if cl.formset.errors %}
+		                <p class="errornote">
+		                    {% if cl.formset.total_error_count == 1 %}{% trans "Please correct the error below." %}{% else %}{% trans "Please correct the errors below." %}{% endif %}
+		                </p>
+		                {{ cl.formset.non_form_errors }}
+		            {% endif %}
+		            <!-- MANAGEMENT FORM -->
+		            {% if cl.formset %}
+		                {{ cl.formset.management_form }}
+		            {% endif %}
+		            <!-- CHANGELIST-RESULTS -->
+		            {% block result_list %}
+		                {% result_list cl %}
+		            {% endblock %}
+		        </section>
+		        <!-- PAGINATION BOTTOM -->
+		        {% if not cl.result_count == 0 %}
+		            {% block pagination_bottom %}
+		                <div class="grp-module">
+		                    <div class="grp-row">{% pagination cl %}</div>
+		                </div>
+		            {% endblock %}
+		        {% endif %}
+						
+						<!-- Upload Link -->
+						{% if request.path|list_get_app_name == "observation" %}
+								{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+						        {% if not cl.result_count == 0 %}
+							      		<div class="grp-module">
+					          		<div class="grp-row">
+				<nav class="grp-pagination"><header style="display:none"><h1>Upload</h1></header><ul>
+								        		{% url cl.opts|admin_urlname:'add' as add_url %}
+														<li><a id="upload" href="upload/{{ cl.get_query_string }}" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Upload{% endblocktrans %}</a></li></li></ul></nav></div></div>
+						        {% endif %}
+								{% endif %}
+						{% endif %}
+
+		        <!-- SUBMIT ROW -->
+		        {% if cl.formset or action_form %}
+		            <footer id="submit" class="grp-module grp-submit-row grp-fixed-footer">
+		                <header style="display:none"><h1>Submit Options</h1></header>
+		                <ul>
+		                    {% if action_form %}
+														{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+																<li class="grp-float-left grp-changelist-actions">{% admin_actions %}</li>
+														{% endif %}
+												{% endif %}
+		                    {% if cl.formset %}<li><input type="submit" class="grp-button grp-default" name="_save" value="{% trans "Save" %}"/></li>{% endif %}
+		                </ul>
+		            </footer>
+		        {% endif %}
+		    </form>
+				{% endif %}
+{% endblock %}

@@ -1,0 +1,12 @@
+{% extends "admin/base.html" %}
+
+{% block title %}{{ 'Administrative User Interface for a Field Observation Server' }} | {{ 'Observations Admin UI Web App' }}{% endblock %}
+{% block extrahead %}
+<link rel="icon" type="image/png" href="/media/favicon.png"/>
+{% endblock %}
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'admin:index' %}">{{ 'Administrative User Interface for a Field Observation Server' }}</a></h1>
+{% endblock %}
+
+{% block nav-global %}{% endblock %}
