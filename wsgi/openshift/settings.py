@@ -204,5 +204,5 @@ LEAFLET_CONFIG = {
     'DEFAULT_ZOOM': 6,
     'MIN_ZOOM': 1,
     'MAX_ZOOM': 8,
-    'TILES': 'http://unixlab.sfsu.edu/~tw1123/openstreetmap/{z}/{x}/{y}.png'
+    'TILES': 'http://kungfulucky7.byethost22.com/openstreetmap/{z}/{x}/{y}.png'
 }
