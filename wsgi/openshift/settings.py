@@ -203,6 +203,6 @@ LEAFLET_CONFIG = {
     'DEFAULT_CENTER': (37.7749295, -122.41941550000001),
     'DEFAULT_ZOOM': 6,
     'MIN_ZOOM': 1,
-    'MAX_ZOOM': 8,
-    'TILES': 'http://kungfulucky7.byethost22.com/openstreetmap/{z}/{x}/{y}.png'
+    'MAX_ZOOM': 19,
+    'TILES': 'http://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png'
 }
