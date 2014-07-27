@@ -21,10 +21,11 @@
 					$("#submit").focus(function() {
 							this.blur();
 					});						
-		  		// $(".progress-label").text("Uploading...");
-		  		// $("#progressbar").progressbar({
-		  		// 		value: false
-		  		// });
+		  		$(".progress-label").text("Uploading...");
+		  		$("#progressbar").progressbar({
+		  				value: false
+		  		});
+					$("#progressbar").hide();
 					var url_array = location.href.split('/');
 					var page = url_array[url_array.length-2];
 					if (page == "upload_images")
@@ -61,10 +62,7 @@
 							$("#submit").click(function() {
 									if ($("#id_file_format").val() != "") {
 											$(".grp-module").remove();
-							  			$(".progress-label").text("Uploading...");
-							    		$("#progressbar").progressbar({
-							    				value: false
-							    		});
+											$("#progressbar").show();
 									}
 							});
 					}
