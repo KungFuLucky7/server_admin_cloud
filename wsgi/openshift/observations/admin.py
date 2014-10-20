@@ -2,6 +2,7 @@ from django.contrib import admin
 from observations.models import Observation
 from observations.resources import ObservationResourceAdmin
 
+# Administrative interface for the Observation model.
 class ObservationAdmin(admin.ModelAdmin):
     fieldsets = [
         (None,               {'fields': ['species']}),

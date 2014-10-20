@@ -157,15 +157,31 @@
     <script type="text/javascript">
         (function($){
             $(document).ready(function() {
+                // enable tooltip
+                $(document).tooltip();
                 $('form#{{ opts.model_name }}_form :input:visible:enabled:first').focus();
-								if($("#id_species").length == 0)
+								if ($("#id_species").length == 0)
 										$("input").blur();
+            });
+        }(grp.jQuery));
+    </script>
+    {% endif %}
+    {% if adminform and change %}
+    <script type="text/javascript">
+        (function($){
+            $(document).ready(function() {
+                // enable tooltip
+                $(document).tooltip();
+                var species = $("#id_species").val();
+                if (species.length)
+                    $("#grp-content-title").append("<div id='ob-title'><h1>" + species + "</h1></div>");
             });
         }(grp.jQuery));
     </script>
     {% endif %}
 		{% if adminform and change and not request.user.is_superuser and perms.observations.readonly_observation %}
     <script type="text/javascript">
+			  // javascript for readonly mode
         (function($){
             $(document).ready(function() {
 						    $('input').attr('readonly', true);
@@ -215,13 +231,22 @@
                 {% block object-tools-items %}
                     {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
 										{% if request.path|form_get_app_name == "observation" %}
-												{% if request.GET.urlencode|length_is:"0" %}
-                    				<li class="guide"><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
-												{% else %}
-                						<li class="guide"><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
-												{% endif %}
-										{% endif %}
-										{% if change %}
+                        {% if change %}
+                            {% if request.GET.urlencode|length_is:"0" %}
+                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% else %}
+                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% endif %}
+                        {% endif %}
+                        {% if add %}
+                            {% if request.GET.urlencode|length_is:"0" %}
+                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% else %}
+                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% endif %}
+                        {% endif %}
+                    {% endif %}
+                    {% if change %}
 		                    <li><a href="{% add_preserved_filters history_url %}">{% trans "History" %}</a></li>
 		                    {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="grp-state-focus" target="_blank">{% trans "View on site" %}</a></li>{% endif%}
 										{% endif %}

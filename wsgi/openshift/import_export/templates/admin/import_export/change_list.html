@@ -129,6 +129,8 @@
     <script type="text/javascript" charset="utf-8">
         (function($) {
             $(document).ready(function() {
+                // enable tooltip
+                $(document).tooltip();
 							  if (!$('div').hasClass('grp-changelist-results')) {
 										$('a[class=export_link]').attr('href', window.location);
 										var querystring = location.search.replace( '?', '' ).split( '&' );
@@ -166,11 +168,15 @@
         <ul class="grp-object-tools">
             {% block object-tools-items %}
                 {% url cl.opts|admin_urlname:'add' as add_url %}
-								{{ block.super }}
-								{% if request.path|list_get_app_name == "observation" %}		
-								<li class="guide"><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
-								{% endif %}
-                <li><a href="{% add_preserved_filters add_url is_popup %}" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
+                {{ block.super }}
+                {% if request.path|list_get_app_name == "observation" %}		
+                    <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                {% endif %}
+                    <li><a href="{% add_preserved_filters add_url is_popup %}" class="addlink" title="You can add an observation entry to the database of the Admin UI Web App.">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
+		            {% if request.path|list_get_app_name == "observation" %}
+                    <!-- Adding Upload Link -->
+                    <li><a href="upload/{{ cl.get_query_string }}" class="addlink" title="You can upload observation entries to an external archive server as a data file in a supported format. You can include image files attached to the entries as well.">{% blocktrans with cl.opts.verbose_name as name %}Upload{% endblocktrans %}</a></li>
+		            {% endif %}
             {% endblock %}
         </ul>
     {% endif %}
@@ -242,7 +248,7 @@
 						<li>
 							You can select all entries by checking the checkbox&nbsp;<img alt="entry_checkbox_unselected" src="/media/guide/entry_checkbox_unselected.png" style="width: 23px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;in the same row as&nbsp;the column names of the list view.&nbsp;</li>
 						<li>
-							You can perform batch delete operation to the selected entries with the batch delete menu (see <strong>Figure 4.1</strong>) at&nbsp;the lower left of the list view. The batch delete menu displays the number of selected entries of the total.<img alt="batch_delete_menu" src="/media/guide/batch_delete_menu.png" style="width: 463px; height: 50px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.1: Batch delete menu</strong></li>
+							You can perform batch delete operation to the selected entries with the batch delete menu (see <strong>Figure 4.1</strong>) at&nbsp;the lower left of the list view. The batch delete menu displays the number of selected entries of the total.<img alt="batch_delete_menu" src="/media/guide/batch_delete_menu.png" style="width: 571px; height: 38px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.1: Batch delete menu</strong></li>
 						<li>
 							You can click on the blank box of the batch delete menu and a&nbsp;pop-up window with the delete option&nbsp;(see <strong>Figure 4.2</strong>)&nbsp;would appear for you to apply the deletion of multiple entries.<img alt="batch_delete_menu_popup" src="/media/guide/batch_delete_menu_popup.png" style="width: 460px; height: 100px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 4.2: Batch delete menu popup</strong></li>
 					</ol>
@@ -255,7 +261,7 @@
 						<li>
 							You can import observation entries by submitting a data file in an&nbsp;accepted format.</li>
 						<li>
-							You can start an import by clicking on the import button <img alt="import_button" src="/media/guide/import_button.png" style="width: 67px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view right above the search box&nbsp;<img alt="search_box" src="/media/guide/search_box.png" style="width: 207px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+							You can start an import by clicking on the import button <img alt="import_button" src="/media/guide/import_button.png" style="width: 68px; height: 26px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view above the &quot;Filter&quot;&nbsp;button <img alt="filter_button" src="/media/guide/filter_button.png" style="width: 188px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
 						<li>
 							You will be taken to the import page (see <strong>Figure 5.1</strong>) to submit the data file.<br /><img alt="import_page" src="/media/guide/import_page.png" style="width: 938px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 5.1: Import page</strong></li>
 						<li>
@@ -276,7 +282,7 @@
 						<li>
 							Apply filters in the list view to choose the particular observation entries for an export. Don&#39;t apply any filters for exporting all existing entries.</li>
 						<li>
-							You can start an export by clicking on the export button&nbsp;<img alt="import_button" src="/media/guide/export_button.png" style="width: 66px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view right above the search box&nbsp;<img alt="search_box" src="/media/guide/search_box.png" style="width: 207px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
+							You can start an export by clicking on the export button&nbsp;<img alt="import_button" src="/media/guide/export_button.png" style="width: 68px; height: 26px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the&nbsp;upper right of the list view above the &quot;Filter&quot;&nbsp;button <img alt="filter_button" src="/media/guide/filter_button.png" style="width: 188px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
 						<li>
 							You will be taken to the export page (see&nbsp;<strong>Figure 6.1</strong>) to save the data file.<br /><img alt="export_page" src="/media/guide/export_page.png" style="width: 1106px; height: 130px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 6.1: Export page</strong></li>
 						<li>
@@ -297,7 +303,7 @@
 						<li>
 							Apply filters in the list view to choose the particular observation entries to upload. Don&#39;t apply any filters for&nbsp;uploading all existing entries.</li>
 						<li>
-							You can start an upload of entries&nbsp;by&nbsp;clicking on the upload button&nbsp;<img alt="upload_button" src="/media/guide/upload_button.png" style="width: 72px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the lower left&nbsp;of the list view below all observation entries.</li>
+							You can start an upload of entries&nbsp;by&nbsp;clicking on the upload button&nbsp;<img alt="upload_button" src="/media/guide/upload_button.png" style="width: 68px; height: 24px; border-width: 1px; border-style: solid; display: inline;" />&nbsp;at the upper right of the list view above the &quot;Filter&quot;&nbsp;button <img alt="filter_button" src="/media/guide/filter_button.png" style="width: 188px; height: 25px; border-width: 1px; border-style: solid; display: inline;" />.</li>
 						<li>
 							You will be taken to the upload page (see&nbsp;<strong>Figure 7.1</strong>) to upload the entries.<br /><img alt="upload_page" src="/media/guide/upload_page.png" style="width: 947px; height: 150px; border-width: 1px; border-style: solid;" /><br /><strong style="font-size: 10px;">Figure 7.1: Upload&nbsp;page</strong></li>
 						<li>
@@ -418,19 +424,6 @@
 		                </div>
 		            {% endblock %}
 		        {% endif %}
-						
-						<!-- Upload Link -->
-						{% if request.path|list_get_app_name == "observation" %}
-								{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
-						        {% if not cl.result_count == 0 %}
-							      		<div class="grp-module">
-					          		<div class="grp-row">
-				<nav class="grp-pagination"><header style="display:none"><h1>Upload</h1></header><ul>
-								        		{% url cl.opts|admin_urlname:'add' as add_url %}
-														<li><a id="upload" href="upload/{{ cl.get_query_string }}" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Upload{% endblocktrans %}</a></li></li></ul></nav></div></div>
-						        {% endif %}
-								{% endif %}
-						{% endif %}
 
 		        <!-- SUBMIT ROW -->
 		        {% if cl.formset or action_form %}
@@ -439,7 +432,8 @@
 		                <ul>
 		                    {% if action_form %}
 														{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
-																<li class="grp-float-left grp-changelist-actions">{% admin_actions %}</li>
+																<li id="batch-delete-title" class="addlink" title="The below batch delete menu is for deleting selected multiple observation entries.">{% blocktrans with cl.opts.verbose_name as name %}Batch Delete Option >>{% endblocktrans %}</li>
+																<li id="batch-delete-option" class="grp-float-left grp-changelist-actions">{% admin_actions %}</li>
 														{% endif %}
 												{% endif %}
 		                    {% if cl.formset %}<li><input type="submit" class="grp-button grp-default" name="_save" value="{% trans "Save" %}"/></li>{% endif %}

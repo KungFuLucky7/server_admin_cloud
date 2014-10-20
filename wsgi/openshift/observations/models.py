@@ -5,7 +5,7 @@ from django.contrib.auth.models import User
 from filebrowser.fields import FileBrowseField
 from geoposition.fields import GeopositionField
 
-# Create your models here.
+# The Observation model for the Administrative UI for a Field Observation Server.
 class Observation(models.Model):
     species = models.CharField(max_length=100, blank=True, null=True)
     family =  models.CharField(max_length=100, blank=True, null=True)
