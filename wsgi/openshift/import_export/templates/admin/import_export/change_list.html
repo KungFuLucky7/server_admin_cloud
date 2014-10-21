@@ -432,7 +432,7 @@
 		                <ul>
 		                    {% if action_form %}
 														{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
-																<li id="batch-delete-title" class="addlink" title="The below batch delete menu is for deleting selected multiple observation entries.">{% blocktrans with cl.opts.verbose_name as name %}Batch Delete Option >>{% endblocktrans %}</li>
+																<li id="batch-delete-title" class="addlink" title="The below batch delete menu is for deleting the multiple selected observation entries.">{% blocktrans with cl.opts.verbose_name as name %}Batch Delete Option >>{% endblocktrans %}</li>
 																<li id="batch-delete-option" class="grp-float-left grp-changelist-actions">{% admin_actions %}</li>
 														{% endif %}
 												{% endif %}
