@@ -60,6 +60,10 @@ ol {
   margin-top: -100px;
 }
 
+#logout-content-container {
+  margin-top: 24px;
+}
+
 #project-title,
 #author-title,
 #contact-title {
@@ -86,15 +90,15 @@ body.grp-login .grp-module-login h1 span.grp-admin-title {
 }
 
 #list-guide {
-  margin-right: 590px;
+  margin-right: 570px;
 }
 
 #change-guide {
-  margin-right: 820px;
+  margin-right: 800px;
 }
 
 #add-guide {
-  margin-right: 940px;
+  margin-right: 920px;
 }
 
 #ob-title {
