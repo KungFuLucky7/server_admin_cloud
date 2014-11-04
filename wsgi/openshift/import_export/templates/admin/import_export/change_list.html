@@ -169,8 +169,14 @@
             {% block object-tools-items %}
                 {% url cl.opts|admin_urlname:'add' as add_url %}
                 {{ block.super }}
-                {% if request.path|list_get_app_name == "observation" %}		
-                    <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                {% if request.path|list_get_app_name == "observation" %}
+                    {% if not request.GET.urlencode|length_is:"0" %}
+                        {% if "e=guide" not in request.GET.urlencode %}
+                        <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?{{ request.GET.urlencode }}&e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                    {% endif %}
                 {% endif %}
                     <li><a href="{% add_preserved_filters add_url is_popup %}" class="addlink" title="You can add an observation entry to the database of the Admin UI Web App.">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
 		            {% if request.path|list_get_app_name == "observation" %}
@@ -185,7 +191,7 @@
 <!-- CONTENT -->
 {% block content %}
 		<!-- Quick Start Guide -->
-		{% if not request.GET.urlencode|length_is:"0" and request.path|list_get_app_name == "observation" and request.GET.urlencode == "e=guide" %}
+		{% if not request.GET.urlencode|length_is:"0" and request.path|list_get_app_name == "observation" and "e=guide" in request.GET.urlencode %}
 				<div>
 					<div>
 						<h1><strong>Quick Start Guide</strong></h1>
@@ -327,8 +333,12 @@
 				<footer class="grp-module grp-submit-row grp-fixed-footer">
 				    <header style="display:none"><h1>Submit Options</h1></header>
 				    <ul>
-									<div id="results"></div>
-									<li><input type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                <div id="results"></div>
+                    {% if request.GET.urlencode == "e=guide" %}
+                        <li><input type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                    {% else %}
+                        <li><input type=button onClick="window.location.href='{{ request.path }}?{{ request.GET.urlencode|trim_query_string }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                    {% endif %}
 				    </ul>
 				</footer>
 				

@@ -125,3 +125,8 @@ body.grp-login .grp-module-login h1 span.grp-admin-title {
   background: yellow;
   border-radius: 10px;
 }
+
+#return {
+  height: 28px;
+  width: 63px;
+}

@@ -162,6 +162,18 @@
                 $('form#{{ opts.model_name }}_form :input:visible:enabled:first').focus();
 								if ($("#id_species").length == 0)
 										$("input").blur();
+                var url = window.location.href;
+								var url_parts = url.split('/');
+								url_parts.splice(6, 2);
+								url = url_parts.join('/');
+                var querystring = location.search.replace( '?', '' ).split( '&' ).toString();
+								if (querystring) {
+								    querystring = decodeURIComponent(querystring.substring(querystring.indexOf("=") + 1));
+                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '?' + querystring + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
+								}								
+								else {
+                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
+								}
             });
         }(grp.jQuery));
     </script>
@@ -172,8 +184,20 @@
             $(document).ready(function() {
                 // enable tooltip
                 $(document).tooltip();
+                var url = window.location.href;
+								var url_parts = url.split('/');
+								url_parts.splice(6, 2);
+								url = url_parts.join('/');
+                var querystring = location.search.replace( '?', '' ).split( '&' ).toString();
+								if (querystring) {
+                    querystring = decodeURIComponent(querystring.substring(querystring.indexOf("=") + 1));
+                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '?' + querystring + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
+								}								
+								else {
+                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
+								}
                 var species = $("#id_species").val();
-                if (species.length)
+                if (typeof species !== 'undefined' && species.length)
                     $("#grp-content-title").append("<div id='ob-title'><h1>" + species + "</h1></div>");
             });
         }(grp.jQuery));
@@ -230,19 +254,23 @@
             <ul class="grp-object-tools">
                 {% block object-tools-items %}
                     {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
-										{% if request.path|form_get_app_name == "observation" %}
+                    {% if request.path|form_get_app_name == "observation" %}
                         {% if change %}
-                            {% if request.GET.urlencode|length_is:"0" %}
-                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% if not request.GET.urlencode|length_is:"0" %}
+                                {% if "e=guide" not in request.GET.urlencode %}
+                                    <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                                {% endif %}
                             {% else %}
-                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
                             {% endif %}
                         {% endif %}
                         {% if add %}
-                            {% if request.GET.urlencode|length_is:"0" %}
-                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% if not request.GET.urlencode|length_is:"0" %}
+                                {% if "e=guide" not in request.GET.urlencode %}
+                                    <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                                {% endif %}
                             {% else %}
-                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
                             {% endif %}
                         {% endif %}
                     {% endif %}
@@ -406,8 +434,14 @@
 								<footer class="grp-module grp-submit-row grp-fixed-footer">
 								    <header style="display:none"><h1>Submit Options</h1></header>
 								    <ul>
-													<div id="results"></div>
-													<li><input id="return" type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                        <div id="results"></div>
+                            {% if request.GET.urlencode == "e=guide" %}
+                                <li><input id="return" type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                            {% else %}
+                                {% with request.GET.urlencode|trim_query_string as query_string %}
+                                    <li><input id="return" type=button onClick="window.location.href='{{ request.path }}?{{ query_string|modify_query_string }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                                {% endwith %}
+                            {% endif %}
 								    </ul>
 								</footer>
 						{% else %}
@@ -445,8 +479,12 @@
 										<footer class="grp-module grp-submit-row grp-fixed-footer">
 										    <header style="display:none"><h1>Submit Options</h1></header>
 										    <ul>
-															<div id="results"></div>
-															<li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}'" value="Return" class="grp-button grp-default" name="return" ></li>
+												<div id="results"></div>
+												    {% if not request.GET.urlencode|length_is:"0" %}
+														    <li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}?{{ request.GET.urlencode|modify_query_string }}'" value="Return" class="grp-button grp-default" name="return" ></li>
+														{% else %}
+														    <li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}'" value="Return" class="grp-button grp-default" name="return" ></li>
+                            {% endif %}
 										    </ul>
 										</footer>
 								{% else %}
