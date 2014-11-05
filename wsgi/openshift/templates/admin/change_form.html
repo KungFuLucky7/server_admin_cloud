@@ -163,17 +163,10 @@
 								if ($("#id_species").length == 0)
 										$("input").blur();
                 var url = window.location.href;
-								var url_parts = url.split('/');
-								url_parts.splice(6, 2);
-								url = url_parts.join('/');
-                var querystring = location.search.replace( '?', '' ).split( '&' ).toString();
-								if (querystring) {
-								    querystring = decodeURIComponent(querystring.substring(querystring.indexOf("=") + 1));
-                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '?' + querystring + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
-								}								
-								else {
-                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
-								}
+                var url_parts = url.split('/');
+                url_parts.splice(6, 2);
+                url = url_parts.join('/');
+                $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '/\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
             });
         }(grp.jQuery));
     </script>
@@ -185,17 +178,10 @@
                 // enable tooltip
                 $(document).tooltip();
                 var url = window.location.href;
-								var url_parts = url.split('/');
-								url_parts.splice(6, 2);
-								url = url_parts.join('/');
-                var querystring = location.search.replace( '?', '' ).split( '&' ).toString();
-								if (querystring) {
-                    querystring = decodeURIComponent(querystring.substring(querystring.indexOf("=") + 1));
-                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '?' + querystring + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
-								}								
-								else {
-                    $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
-								}
+                var url_parts = url.split('/');
+                url_parts.splice(6, 2);
+                url = url_parts.join('/');
+                $("input[name='_continue']").parent().parent().append('<li><input id="return" onclick="window.location.href=\'' + url + '/\'" value="Return" class="grp-button grp-default" name="return" type="button"></li>');
                 var species = $("#id_species").val();
                 if (typeof species !== 'undefined' && species.length)
                     $("#grp-content-title").append("<div id='ob-title'><h1>" + species + "</h1></div>");
@@ -435,13 +421,7 @@
 								    <header style="display:none"><h1>Submit Options</h1></header>
 								    <ul>
                         <div id="results"></div>
-                            {% if request.GET.urlencode == "e=guide" %}
-                                <li><input id="return" type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
-                            {% else %}
-                                {% with request.GET.urlencode|trim_query_string as query_string %}
-                                    <li><input id="return" type=button onClick="window.location.href='{{ request.path }}?{{ query_string|modify_query_string }}'" value="Return" class="grp-button grp-default" name="return" ></li>
-                                {% endwith %}
-                            {% endif %}
+                            <li><input id="return" type=button onClick="window.location.href='{{ request.path }}'" value="Return" class="grp-button grp-default" name="return" ></li>
 								    </ul>
 								</footer>
 						{% else %}
@@ -480,11 +460,7 @@
 										    <header style="display:none"><h1>Submit Options</h1></header>
 										    <ul>
 												<div id="results"></div>
-												    {% if not request.GET.urlencode|length_is:"0" %}
-														    <li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}?{{ request.GET.urlencode|modify_query_string }}'" value="Return" class="grp-button grp-default" name="return" ></li>
-														{% else %}
-														    <li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}'" value="Return" class="grp-button grp-default" name="return" ></li>
-                            {% endif %}
+												    <li><input id="return" type=button onclick="window.location.href='{% url opts|admin_urlname:'changelist' %}'" value="Return" class="grp-button grp-default" name="return" ></li>
 										    </ul>
 										</footer>
 								{% else %}

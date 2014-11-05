@@ -28,21 +28,3 @@ def trim_query_string(value):
     elif 'e=guide' in value:
         query_string = value.replace('e=guide', '')
     return query_string
-    
-@register.filter
-@stringfilter
-def trim_url(value):
-    """Trim url for the correct path"""
-    url_parts = value.split('/', 4)
-    url_parts.remove(url_parts[4])
-    url = '/'.join(url_parts)
-    return url
-    
-@register.filter
-@stringfilter
-def modify_query_string(value):
-    """In form view, modify the query string to the correct format"""
-    query_string = value
-    #if '_changelist_filters=' in value:
-        #query_string = value.replace('_changelist_filters=', '')
-    return urllib2.unquote(query_string)
