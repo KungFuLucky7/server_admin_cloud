@@ -121,9 +121,9 @@
 
     <div class="submit-row">
       {% if not request.GET.urlencode|length_is:"0" %}
-        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}?{{ request.GET.urlencode }}'" value="Return" class="grp-button" name="return" >
+        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}/?{{ request.GET.urlencode }}'" value="Return" class="grp-button" name="return" >
       {% else %}
-        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}'" value="Return" class="grp-button" name="return" >
+        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}/'" value="Return" class="grp-button" name="return" >
       {% endif %}
       {% if request.path|list_get_app_name == "upload" %}
         <input id="submit" type="submit" class="default" value="{% trans "Upload" %}">

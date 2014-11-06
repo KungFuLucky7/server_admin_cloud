@@ -3,6 +3,14 @@
 {% load i18n %}
 {% load admin_urls %}
 {% load import_export_tags %}
+{% load observations %}
+
+<!-- STYLESHEETS -->
+{% block stylesheets %}
+    {{ block.super }}
+    {{ media.css }}
+    <link rel="stylesheet" type="text/css" href="/static/observations.css">
+{% endblock %}
 
 {% block breadcrumbs_last %}
 {% trans "Import" %}
@@ -54,6 +62,11 @@
     </fieldset>
 
     <div class="submit-row">
+      {% if not request.GET.urlencode|length_is:"0" %}
+        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}/?{{ request.GET.urlencode }}'" value="Return" class="grp-button" name="return" >
+      {% else %}
+        <input id ="return" type=button onClick="window.location.href='{{ request.path|trim_url }}/'" value="Return" class="grp-button" name="return" >
+      {% endif %}
       <input type="submit" class="default" value="{% trans "Submit" %}">
     </div>
   </form>

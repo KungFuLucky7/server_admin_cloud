@@ -3,8 +3,12 @@
 
 {% block object-tools-items %}
   {{ block.super }}
-	{% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
-	  <li><a href="import/" class="import_link" title="You can import observation entries by submitting a data file in an accepted format.">{% trans "Import" %}</a></li>
+    {% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+      {% if not request.GET.urlencode|length_is:"0" %}
+        <li><a href="import/?{{ request.GET.urlencode }}" class="import_link" title="You can import observation entries by submitting a data file in an accepted format.">{% trans "Import" %}</a></li>
+      {% else %}
+        <li><a href="import/" class="import_link" title="You can import observation entries by submitting a data file in an accepted format.">{% trans "Import" %}</a></li>
+      {% endif %}
 	  <li><a href="export/{{ cl.get_query_string }}" class="export_link" title="You can export observation entries by saving filtered entries to a data file in a supported format.">{% trans "Export" %}</a></li>
 	{% endif %}
 {% endblock %}
