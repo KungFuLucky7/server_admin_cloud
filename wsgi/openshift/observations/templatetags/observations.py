@@ -28,3 +28,12 @@ def trim_query_string(value):
     elif 'e=guide' in value:
         query_string = value.replace('e=guide', '')
     return query_string
+
+@register.filter
+@stringfilter
+def trim_url(value):
+    """Trim url for the correct path"""
+    url_parts = value.split('/', 4)
+    url_parts.remove(url_parts[4])
+    url = '/'.join(url_parts)
+    return url
