@@ -177,6 +177,7 @@
             $(document).ready(function() {
                 // enable tooltip
                 $(document).tooltip();
+                $(".grp-button.grp-delete-link").parent("li").removeClass("grp-float-left");
                 var url = window.location.href;
                 var url_parts = url.split('/');
                 url_parts.splice(6, 2);
