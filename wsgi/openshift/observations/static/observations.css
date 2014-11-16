@@ -112,17 +112,11 @@ body.grp-login .grp-module-login h1 span.grp-admin-title {
 }
 
 #batch-delete-title {
-  float: left;
   margin-top: 5px;
-  margin-left: -5px;
   font-size: 15px;
   background: linear-gradient(#ffffff,#B8B8B8);
   color: #309bbf;
   font-weight: bold;
-}
-
-#batch-delete-option {
-  margin-left: 10px;
 }
 
 .ui-tooltip {
