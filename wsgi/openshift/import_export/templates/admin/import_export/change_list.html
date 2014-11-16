@@ -134,8 +134,8 @@
 							  if (!$('div').hasClass('grp-changelist-results')) {
 										$('a[class=export_link]').attr('href', window.location);
 										var querystring = location.search.replace( '?', '' ).split( '&' );
-										if (querystring != "e=guide")
-												$("#grp-content-container").after("<div class='grp-module'><h1>&nbsp;&nbsp;No observation entry is displayed!</h1></div>");
+                    if (querystring.indexOf("e=guide") == -1)
+                        $("#grp-content-container").after("<div class='grp-module'><h1>&nbsp;&nbsp;No observation entry is displayed!</h1></div>");
 								}
             });
         })(grp.jQuery);
