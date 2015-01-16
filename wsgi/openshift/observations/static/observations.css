@@ -77,11 +77,8 @@ ol {
 }
 
 body.grp-login .grp-module-login h1 span.grp-admin-title {
-  padding: 5px 10px 28px 7px;
-}
-
-.grp-admin-title {
-  text-align: -webkit-center;
+  padding: 5px 10px 30px 7px;
+  text-align: center;
 }
 
 #login-submit-btn {
