@@ -237,29 +237,31 @@
 {% block object-tools %}
     {% if change or add %}
         {% if not is_popup %}
+				    <ul class="grp-object-tools guide">
+                {% if request.path|form_get_app_name == "observation" %}
+                    {% if change %}
+                        {% if not request.GET.urlencode|length_is:"0" %}
+                            {% if "e=guide" not in request.GET.urlencode %}
+                                <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                        {% endif %}
+                    {% endif %}
+                    {% if add %}
+                        {% if not request.GET.urlencode|length_is:"0" %}
+                            {% if "e=guide" not in request.GET.urlencode %}
+                                <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
+                            {% endif %}
+                        {% else %}
+                            <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
+                        {% endif %}
+                    {% endif %}
+                {% endif %}
+				    </ul>
             <ul class="grp-object-tools">
                 {% block object-tools-items %}
                     {% url opts|admin_urlname:'history' original.pk|admin_urlquote as history_url %}
-                    {% if request.path|form_get_app_name == "observation" %}
-                        {% if change %}
-                            {% if not request.GET.urlencode|length_is:"0" %}
-                                {% if "e=guide" not in request.GET.urlencode %}
-                                    <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
-                                {% endif %}
-                            {% else %}
-                                <li class="guide" id="change-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
-                            {% endif %}
-                        {% endif %}
-                        {% if add %}
-                            {% if not request.GET.urlencode|length_is:"0" %}
-                                {% if "e=guide" not in request.GET.urlencode %}
-                                    <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}&e=guide">{% trans "Quick Start Guide" %}</a></li>
-                                {% endif %}
-                            {% else %}
-                                <li class="guide" id="add-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{% add_preserved_filters add_url is_popup %}?e=guide">{% trans "Quick Start Guide" %}</a></li>
-                            {% endif %}
-                        {% endif %}
-                    {% endif %}
                     {% if change %}
 		                    <li><a href="{% add_preserved_filters history_url %}">{% trans "History" %}</a></li>
 		                    {% if has_absolute_url %}<li><a href="{% url 'admin:view_on_site' content_type_id original.pk %}" class="grp-state-focus" target="_blank">{% trans "View on site" %}</a></li>{% endif%}

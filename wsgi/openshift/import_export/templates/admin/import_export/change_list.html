@@ -165,29 +165,31 @@
 <!-- OBJECT-TOOLS -->
 {% block object-tools %}
     {% if has_add_permission %}
+		    <ul class="grp-object-tools guide">
+            {% if request.path|list_get_app_name == "observation" %}
+                {% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
+                    {% if not request.GET.urlencode|length_is:"0" %}
+                        {% if "e=guide" not in request.GET.urlencode %}
+                            <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?{{ request.GET.urlencode }}&e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                    {% endif %}
+                {% else %}
+                    {% if not request.GET.urlencode|length_is:"0" %}
+                        {% if "e=guide" not in request.GET.urlencode %}
+                            <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?{{ request.GET.urlencode }}&e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                        {% endif %}
+                    {% else %}
+                        <li class="guide" id="guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
+                    {% endif %}
+                {% endif %}
+            {% endif %}
+			  </ul>
         <ul class="grp-object-tools">
             {% block object-tools-items %}
                 {% url cl.opts|admin_urlname:'add' as add_url %}
-                {{ block.super }}
-                {% if request.path|list_get_app_name == "observation" %}
-                    {% if request.user.is_superuser or perms.observations.change_observation and not perms.observations.readonly_observation %}
-                        {% if not request.GET.urlencode|length_is:"0" %}
-                            {% if "e=guide" not in request.GET.urlencode %}
-                                <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?{{ request.GET.urlencode }}&e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
-                            {% endif %}
-                        {% else %}
-                            <li class="guide" id="list-guide" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
-                        {% endif %}
-                    {% else %}
-                        {% if not request.GET.urlencode|length_is:"0" %}
-                            {% if "e=guide" not in request.GET.urlencode %}
-                                <li class="guide" id="list-guide-regular" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?{{ request.GET.urlencode }}&e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
-                            {% endif %}
-                        {% else %}
-                            <li class="guide" id="list-guide-regular" title="This is a guide to help you with the Admin UI Web App."><a href="{{ model.admin_url }}?e=guide" class="addlink">{% blocktrans with cl.opts.verbose_name as name %}Quick Start Guide{% endblocktrans %}</a></li>
-                        {% endif %}
-                    {% endif %}
-                {% endif %}
+                    {{ block.super }}
                     <li><a href="{% add_preserved_filters add_url is_popup %}" class="addlink" title="You can add an observation entry to the database of the Admin UI Web App.">{% blocktrans with cl.opts.verbose_name as name %}Add {{ name }}{% endblocktrans %}</a></li>
 		            {% if request.path|list_get_app_name == "observation" %}
                     <!-- Adding Upload Link -->
