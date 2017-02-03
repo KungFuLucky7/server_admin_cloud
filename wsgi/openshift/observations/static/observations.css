@@ -87,19 +87,19 @@ body.grp-login .grp-module-login h1 span.grp-admin-title {
 }
 
 #list-guide {
-  margin-right: 570px;
+  padding-right: 570px;
 }
 
 #list-guide-regular {
-  margin-right: 730px;
+  padding-right: 730px;
 }
 
 #change-guide {
-  margin-right: 800px;
+  padding-right: 800px;
 }
 
 #add-guide {
-  margin-right: 920px;
+  padding-right: 920px;
 }
 
 #ob-title {
