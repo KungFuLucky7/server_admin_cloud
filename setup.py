@@ -14,7 +14,6 @@ setup(name='server_admin',
       description='Administrative User Interface for a Field Observation Server',
       author='Terry C. Wong',
       author_email='tw1123@mail.sfsu.edu',
-      url='https://github.com/KungFuLucky7/server_admin',
+      url='https://github.com/KungFuLucky7/server_admin_cloud',
       install_requires=packages,
 )
-
